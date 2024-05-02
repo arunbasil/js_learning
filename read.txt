@@ -1,0 +1,76 @@
+Creating a comprehensive analysis template for documenting potential data migration issues from Oracle to Snowflake in Confluence can help streamline the process and ensure all relevant details are captured effectively. Below is a structured template that you can use in Confluence. You can add sections as necessary depending on the specific needs and scope of your migration project.
+
+### Data Migration Analysis Template
+
+#### Title: Data Migration Issue Analysis from Oracle to Snowflake
+
+---
+
+### 1. Introduction
+- **Purpose**: Provide an overview of the purpose of this document, which is to identify and analyze potential data type compatibility issues during the migration from Oracle to Snowflake.
+- **Scope**: Define the boundaries of the migration analysis, including the databases and systems involved.
+
+---
+
+### 2. Summary of Known Data Type Issues
+Provide a brief overview of the known data type compatibility issues that might affect the migration process.
+
+#### 2.1 Character Encoding Issues
+- **Description**: Differences in character encoding standards between Oracle and Snowflake.
+- **Impact**: Potential data corruption or loss of special characters during migration.
+- **Oracle**: Uses various character sets, potentially differing from UTF-8.
+- **Snowflake**: Exclusively uses UTF-8 encoding.
+
+#### 2.2 Numeric Data Types
+- **Description**: Variations in numeric precision and scale handling between Oracle and Snowflake.
+- **Specific Types Affected**:
+  - **Oracle `NUMBER`**: Precision and scale may not directly translate to Snowflake.
+  - **Oracle `DECIMAL`**: Potential precision loss if not carefully migrated.
+
+#### 2.3 Large Object Types
+- **Description**: Issues related to the handling of large object types during migration.
+- **Specific Types Affected**:
+  - **Oracle `LOB` Types (`BLOB`, `CLOB`)**: Differences in maximum size and handling techniques.
+
+---
+
+### 3. Detailed Analysis of Affected Tables
+Document specific tables that include data types known to cause issues, providing a framework for detailed analysis and action plans.
+
+#### 3.1 Table Overview
+- **Table Name**: 
+- **Schema**:
+- **Description**:
+
+#### 3.2 Issues Identified
+- **Data Type**:
+  - **Description of the Issue**:
+  - **Potential Solutions**:
+  - **Action Plan**:
+
+#### 3.3 Migration Strategies
+- **Recommended Changes**:
+  - **Data Type Conversions**:
+  - **Character Encoding Adjustments**:
+  - **Handling of Large Objects**:
+
+#### 3.4 Testing and Validation
+- **Testing Strategy**:
+  - **Test Cases**:
+  - **Validation Metrics**:
+
+---
+
+### 4. References
+- **Documentation Links**:
+- **Tooling Resources**:
+
+---
+
+### 5. Appendix
+- **Additional Notes**:
+- **Migration Logs**:
+
+---
+
+This template can be adapted and expanded based on the complexity of the migration project and the specific issues encountered. Each section can be further detailed with specific examples, scripts used for migration, and troubleshooting logs to provide a comprehensive resource for teams involved in the migration process.
