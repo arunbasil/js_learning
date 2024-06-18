@@ -1,213 +1,40 @@
-# conftest.py
+import json
+from postman import Collection
 
-import pytest
-from faker import Faker
+def convert_postman_to_pytest(postman_json_path, output_path):
+    with open(postman_json_path, 'r') as file:
+        postman_collection = json.load(file)
+    
+    collection = Collection(postman_collection)
+    output_lines = ["import pytest", "import requests", "\n"]
 
-fake = Faker()
+    for item in collection.items:
+        request = item.request
+        method = request.method.lower()
+        url = request.url.raw
+        headers = {header.key: header.value for header in request.headers}
+        body = request.body.raw if request.body else ''
 
-@pytest.fixture
-def base_url():
-    return "https://api.example.com/v1/confirmation-of-payee"
+        test_name = f"test_{item.name.replace(' ', '_').lower()}"
+        output_lines.append(f"def {test_name}():")
+        
+        if method == 'get':
+            code = f"    response = requests.get('{url}', headers={headers})"
+        elif method == 'post':
+            code = f"    response = requests.post('{url}', headers={headers}, data={body})"
+        elif method == 'put':
+            code = f"    response = requests.put('{url}', headers={headers}, data={body})"
+        elif method == 'delete':
+            code = f"    response = requests.delete('{url}', headers={headers})"
+        else:
+            code = f"    # Unsupported method {method}"
 
-@pytest.fixture
-def valid_payee_data():
-    return {
-        "account_number": fake.bban(),
-        "sort_code": fake.bban(),
-        "payee_name": fake.name(),
-        "reference": fake.word()
-    }
+        output_lines.append(code)
+        output_lines.append("    assert response.status_code == 200")
+        output_lines.append("    print(response.json())\n")
 
-@pytest.fixture
-def invalid_payee_data():
-    return {
-        "account_number": "invalid_account",
-        "sort_code": "invalid_sort_code",
-        "payee_name": "",  # Invalid payee name
-        "reference": fake.word()
-    }
+    with open(output_path, 'w') as file:
+        file.write("\n".join(output_lines))
 
-
-# test_confirmation_of_payee.py
-
-import pytest
-import requests
-
-def test_confirm_payee_valid(base_url, valid_payee_data):
-    response = requests.post(f"{base_url}/confirm", json=valid_payee_data)
-    assert response.status_code == 200
-    json_data = response.json()
-    assert "payee_confirmation" in json_data
-    assert json_data["payee_confirmation"] == "Confirmed"
-
-def test_confirm_payee_invalid_account(base_url, invalid_payee_data):
-    response = requests.post(f"{base_url}/confirm", json=invalid_payee_data)
-    assert response.status_code == 400
-    json_data = response.json()
-    assert "error" in json_data
-    assert json_data["error"]["code"] == "INVALID_ACCOUNT_DETAILS"
-    assert json_data["error"]["message"] == "The account details provided are invalid."
-
-def test_confirm_payee_missing_fields(base_url):
-    incomplete_data = {
-        "account_number": fake.bban(),
-        "sort_code": fake.bban(),
-        # Missing payee_name and reference
-    }
-    response = requests.post(f"{base_url}/confirm", json=incomplete_data)
-    assert response.status_code == 422
-    json_data = response.json()
-    assert "error" in json_data
-    assert json_data["error"]["code"] == "MISSING_REQUIRED_FIELDS"
-    assert json_data["error"]["message"] == "The request is missing required fields."
-
-def test_confirm_payee_not_found(base_url, valid_payee_data):
-    # Simulate a valid payee data but the payee is not found in the bank records
-    response = requests.post(f"{base_url}/confirm", json=valid_payee_data)
-    assert response.status_code == 404
-    json_data = response.json()
-    assert "error" in json_data
-    assert json_data["error"]["code"] == "PAYEE_NOT_FOUND"
-    assert json_data["error"]["message"] == "The payee could not be found."
-
-def test_confirm_payee_internal_server_error(base_url, valid_payee_data):
-    # Simulate an internal server error response
-    response = requests.post(f"{base_url}/confirm", json=valid_payee_data)
-    assert response.status_code == 500
-    json_data = response.json()
-    assert "error" in json_data
-    assert json_data["error"]["code"] == "INTERNAL_SERVER_ERROR"
-    assert json_data["error"]["message"] == "An internal server error occurred. Please try again later."
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environment
-env/
-venv/
-ENV/
-VENV/
-env.bak/
-venv.bak/
-
-# VS Code settings
-.vscode/
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# Mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# Data science
-*.parquet
-*.dask
-*.h5
-*.hdf5
-*.feather
-
-# Cython debug symbols
-cython_debug/
-
+# Example usage
+convert_postman_to_pytest('postman_collection.json', 'test_postman_requests.py')
